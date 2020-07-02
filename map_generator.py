@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from IPython.display import Image as iImage
 from PIL import Image
-from os.path import isfile
+from os.path import isfile, join
 
 def create_collage(width, height, cols, rows, name, listofimages):
     """
@@ -61,13 +61,13 @@ def generate_maps(world, region, ranges):
     # ---------------------------------------------------------
     # get the mapping from block id to block type
     block_dict = {}
-    with open('resources/block_id.json') as json_file:
+    with open(join('resources','block_id.json')) as json_file:
         entries = json.load(json_file)
         for entry in entries:
             if entry['type'] not in block_dict:
                 block_dict[entry['type']] = entry['text_type']
 
-    with open("resources/block_to_texture.json") as json_file:
+    with open(join('resources','block_to_texture.json')) as json_file:
         images = json.load(json_file)
 
     # ---------------------------------------------------------
@@ -114,9 +114,9 @@ def generate_maps(world, region, ranges):
 
                     # generate image pathes of the region
                     if stats['block_type'] in images.keys():
-                        texture = 'resources/myblocks/'+images[stats['block_type']]
+                        texture = join('resources','myblocks',images[stats['block_type']])
                     else:
-                        texture = 'resources/myblocks/nether_brick.png'
+                        texture = join('resources','myblocks','nether_brick.png')
                         cannot_find_blocks.append(stats['block_type'])
 
                     image_layer.append(texture)
@@ -124,7 +124,7 @@ def generate_maps(world, region, ranges):
                         floor_level = stats['y']-y_ind_low
                         name = '[' + str(x_ind) + ',' + str(z_ind)
                         name += ',' + str(floor_level) +']'
-                        name = 'outputs/floors/' + name + "_floor.jpg"
+                        name = join('outputs', 'floors', name + "_floor.jpg")
                         create_collage(16*16, 16*16, 16, 16, name, image_layer)
                         if floor_level not in collage_layers:
                             collage_layers[floor_level] = []
@@ -172,13 +172,13 @@ def generate_maps(world, region, ranges):
     for key in important_blocks.keys():
         x,z = key
         stats = important_blocks[key]
-        image_layer.append('resources/myblocks/'+images[stats['block_type']])
+        image_layer.append(join('resources','myblocks',images[stats['block_type']]))
 
         if stats['x'] == 15 and stats['z'] == 15:
             floor_level = 9
             name = '[' + str(round(x/16 - region[0] * 32)) + ',' + str(round(z/16 - region[1] * 32))
             name += ',' + str(floor_level) +']'
-            name = 'outputs/floors/' + name + "_floor.jpg"
+            name = join('outputs','floors', name + "_floor.jpg")
             create_collage(16*16, 16*16, 16, 16, name, image_layer)
             if floor_level not in collage_layers:
                 collage_layers[floor_level] = []
@@ -190,7 +190,7 @@ def generate_maps(world, region, ranges):
     x_len = x_ind_high - x_ind_low + 1
     z_len = z_ind_high - z_ind_low + 1
     for key in collage_layers.keys():
-        name = 'outputs/'+str(key) + '_map.png'
+        name = join('outputs',str(key) + '_map.png')
         create_collage(16*16*x_len, 16*16*z_len, x_len, z_len, name, collage_layers[key])
         for image in collage_layers[key]:
             os.remove(image)
@@ -220,7 +220,7 @@ def generate_json(all_blocks, ranges):
     region['y_high'] = ranges[5]
     blocks_in_building['region'] = region
 
-    with open('outputs/blocks_in_building.json', 'w') as outfile:
+    with open(join('outputs','blocks_in_building.json'), 'w') as outfile:
         json.dump(blocks_in_building, outfile)
 
 def generate_csv(important_blocks, indices):
@@ -270,22 +270,99 @@ def generate_csv(important_blocks, indices):
             else:
                 csv_block = 'W'
         data[x][z] = csv_block
-    #     print(count, x, z, block['block_type'], csv_block)
-    #     if block['block_type'] not in objects:
-    #         objects.append(block['block_type'])
-    # print(objects)
-    data.to_csv('outputs/darpa_maze.csv', index=False, header=False)
+    data.to_csv(join('outputs','maze.csv'), index=False, header=False)
 
-# ---------------------------------------------------------
-## for comparing changes between another json file
-# with open('blocks_in_building.json') as json_file:
-#     data = json.load(json_file)
-#     count = 0
-#     count2 = 0
-#     for key,value in data.items():
-#         if key in blocks_to_json.keys():
-#             count += 1
-#             if value != blocks_to_json[key]:
-#                 count2 += 1
-#                 print(key, blocks_to_json[key], value)
-#     print(count, count2)
+
+def merge_folders(folder1, folder2):
+
+    def get_concat_h(im1, im2):
+        dst = Image.new('RGB', (im1.width + im2.width, im1.height))
+        dst.paste(im1, (0, 0))
+        dst.paste(im2, (im1.width, 0))
+        return dst
+
+    def get_concat_v(im1, im2):
+        dst = Image.new('RGB', (im1.width, im1.height + im2.height))
+        dst.paste(im1, (0, 0))
+        dst.paste(im2, (0, im1.height))
+        return dst
+
+    # ----------------------------
+    # json
+    # ----------------------------
+
+    with open(join(folder1, 'blocks_in_building.json')) as json_file: json1 = json.load(json_file)
+    with open(join(folder2, 'blocks_in_building.json')) as json_file: json2 = json.load(json_file)
+    # json2 = json.loads(join(folder2, 'blocks_in_building.json'))
+    json3 = {}
+    json3['blocks'] = dict(json1['blocks'])
+    json3['blocks'].update(json2['blocks'])
+    print('number of blocks',len(json1['blocks'].keys()),len(json2['blocks'].keys()), len(json3['blocks'].keys()))
+
+    X_CHANGED = False
+    Z_CHANGED = False
+
+    json3['region'] = {}
+    for key in ['x_low','x_high','z_low','z_high','y_low','y_high']:  
+        if 'low' in key:
+            json3['region'][key] = min(json1['region'][key], json2['region'][key])
+        else:
+            json3['region'][key] = max(json1['region'][key], json2['region'][key])
+        
+        if json1['region'][key] != json2['region'][key]:
+            if 'x' in key: X_CHANGED = True
+            if 'z' in key: Z_CHANGED = True
+                
+    with open('outputs/blocks_in_building.json', 'w') as outfile:
+        json.dump(json3, outfile)
+
+    # ----------------------------
+    # png
+    # ----------------------------
+
+    for level in [0,1,2,9]:
+        map_img = str(level) + '_map.png'
+        im1 = Image.open(join(folder1, map_img))
+        im2 = Image.open(join(folder2, map_img))
+        if X_CHANGED: get_concat_h(im1, im2).save(join('outputs', map_img))
+        if Z_CHANGED: get_concat_v(im1, im2).save(join('outputs', map_img))
+
+def show_blocks_in_building():
+    objects2grids = {
+        'wool':'v',
+        'prismarine':'v',
+        'gold_block':'vv',
+        'wooden_door':'w',
+        'gravel':'w',
+        'fire':'',
+        'air':''
+    }
+
+    with open(join('outputs','blocks_in_building.json')) as json_file:
+        data = json.load(json_file)
+        blocks = data['blocks']
+        
+        print(data['region'].values())
+        x_low, x_high, z_low, z_high, y_low, y_high = data['region'].values()
+        
+        ## for Singleplayer
+        # x_high = -2142
+        
+        world = []
+        for z in range(z_low, z_high):
+            row = []
+            for x in range(x_low, x_high):
+                
+                ## we visualize the floor that's one level above the ground
+                key = str((x,y_low+1,z)).replace('(','').replace(' ','').replace(')','')
+                type = blocks[key]
+                if type not in objects2grids.keys():
+                    type = 'w'
+                else:
+                    type = objects2grids[type]
+                row.append(type)
+            world.append(row)
+            
+        df = pd.DataFrame(world, index = range(z_low, z_high), columns = range(x_low, x_high))
+
+        return df

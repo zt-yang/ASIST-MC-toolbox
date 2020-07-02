@@ -5,6 +5,7 @@
 "lit_redstone_lamp": "redstone_lamp_on.png",
 "redstone_wire":"redstone_dust_line1.png",
 "unpowered_repeater": "repeater_off.png",
+"powered_repeater": "repeater_off.png",
 "gravel": "gravel.png",
 "dirt": "dirt.png",
 "grass": "wool_colored_green.png",
