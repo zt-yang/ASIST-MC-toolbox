@@ -80,5 +80,7 @@
 "acacia_door": "door_acacia_upper.png",
 "stained_glass": "glass_gray.png",
 "brick_stairs": "furnace_side.png",
-"nether_brick_fence": "nether_brick.png"
+"nether_brick_fence": "nether_brick.png",
+"orange_glazed_terracotta": "glazed_terracotta_orange.png",
+"white_glazed_terracotta": "glazed_terracotta_white.png"
 }
