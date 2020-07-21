@@ -10,6 +10,16 @@ from IPython.display import Image as iImage
 from PIL import Image
 from os.path import isfile, join
 
+default_output_folder = 'outputs'
+default_json_file = 'blocks_in_building.json'
+ipy_display = True
+
+
+def set_ipy_display(val):
+    global ipy_display
+    ipy_display = val
+
+
 def create_collage(width, height, cols, rows, name, listofimages):
     """
         take in a list of images and make a collage with the specified width and height
@@ -45,7 +55,7 @@ def create_collage(width, height, cols, rows, name, listofimages):
 
 # first version of the Singleplayer world
 # all_blocks = generate_maps(region, (23, 26, 9, 11, 12, 14, 1))
-def generate_maps(world, region, ranges):
+def generate_maps(world, region, ranges, output_folder=default_output_folder):
 
     x_low, x_high, z_low, z_high, y_low, y_high = ranges
     x_ind_low = int(x_low / 16 - region[0] * 32)  # int((2560 + x_low)/16)
@@ -178,7 +188,7 @@ def generate_maps(world, region, ranges):
             floor_level = 9
             name = '[' + str(round(x/16 - region[0] * 32)) + ',' + str(round(z/16 - region[1] * 32))
             name += ',' + str(floor_level) +']'
-            name = join('outputs','floors', name + "_floor.jpg")
+            name = join(output_folder,'floors', name + "_floor.jpg")
             create_collage(16*16, 16*16, 16, 16, name, image_layer)
             if floor_level not in collage_layers:
                 collage_layers[floor_level] = []
@@ -190,15 +200,15 @@ def generate_maps(world, region, ranges):
     x_len = x_ind_high - x_ind_low + 1
     z_len = z_ind_high - z_ind_low + 1
     for key in collage_layers.keys():
-        name = join('outputs',str(key) + '_map.png')
+        name = join(output_folder,str(key) + '_map.png')
         create_collage(16*16*x_len, 16*16*z_len, x_len, z_len, name, collage_layers[key])
         for image in collage_layers[key]:
             os.remove(image)
-        if key == 9:  display(iImage(filename=name))
+        if ipy_display is True and key == 9:  display(iImage(filename=name))
 
     return all_blocks, important_blocks
 
-def generate_json(all_blocks, ranges):
+def generate_json(all_blocks, ranges, output_folder=default_output_folder, jsn_file=default_json_file):
 
     blocks_in_building = {}
 
@@ -220,10 +230,10 @@ def generate_json(all_blocks, ranges):
     region['y_high'] = ranges[5]
     blocks_in_building['region'] = region
 
-    with open(join('outputs','blocks_in_building.json'), 'w') as outfile:
+    with open(join(output_folder, jsn_file), 'w') as outfile:
         json.dump(blocks_in_building, outfile)
 
-def generate_csv(important_blocks, indices):
+def generate_csv(important_blocks, indices, output_folder=default_output_folder):
 
     x_low, x_high, z_low, z_high, y_low, y_high = indices
 
@@ -270,10 +280,10 @@ def generate_csv(important_blocks, indices):
             else:
                 csv_block = 'W'
         data[x][z] = csv_block
-    data.to_csv(join('outputs','maze.csv'), index=False, header=False)
+    data.to_csv(join(output_folder,'maze.csv'), index=False, header=False)
 
 
-def merge_folders(folder1, folder2):
+def merge_folders(folder1, folder2, output_folder=default_output_folder, jsn_file=default_json_file):
 
     def get_concat_h(im1, im2):
         dst = Image.new('RGB', (im1.width + im2.width, im1.height))
@@ -291,9 +301,9 @@ def merge_folders(folder1, folder2):
     # json
     # ----------------------------
 
-    with open(join(folder1, 'blocks_in_building.json')) as json_file: json1 = json.load(json_file)
-    with open(join(folder2, 'blocks_in_building.json')) as json_file: json2 = json.load(json_file)
-    # json2 = json.loads(join(folder2, 'blocks_in_building.json'))
+    with open(join(folder1, jsn_file)) as json_file: json1 = json.load(json_file)
+    with open(join(folder2, jsn_file)) as json_file: json2 = json.load(json_file)
+    # json2 = json.loads(join(folder2, jsn_file))
     json3 = {}
     json3['blocks'] = dict(json1['blocks'])
     json3['blocks'].update(json2['blocks'])
@@ -303,16 +313,16 @@ def merge_folders(folder1, folder2):
     Z_CHANGED = False
 
     json3['region'] = {}
-    for key in ['x_low','x_high','z_low','z_high','y_low','y_high']:  
+    for key in ['x_low','x_high','z_low','z_high','y_low','y_high']:
         if 'low' in key:
             json3['region'][key] = min(json1['region'][key], json2['region'][key])
         else:
             json3['region'][key] = max(json1['region'][key], json2['region'][key])
-        
+
         if json1['region'][key] != json2['region'][key]:
             if 'x' in key: X_CHANGED = True
             if 'z' in key: Z_CHANGED = True
-                
+
     with open('outputs/blocks_in_building.json', 'w') as outfile:
         json.dump(json3, outfile)
 
@@ -324,10 +334,11 @@ def merge_folders(folder1, folder2):
         map_img = str(level) + '_map.png'
         im1 = Image.open(join(folder1, map_img))
         im2 = Image.open(join(folder2, map_img))
-        if X_CHANGED: get_concat_h(im1, im2).save(join('outputs', map_img))
-        if Z_CHANGED: get_concat_v(im1, im2).save(join('outputs', map_img))
+        if X_CHANGED: get_concat_h(im1, im2).save(join(output_folder, map_img))
+        if Z_CHANGED: get_concat_v(im1, im2).save(join(output_folder, map_img))
 
-def show_blocks_in_building():
+
+def show_blocks_in_building(output_folder=default_output_folder, jsn_file=default_json_file):
     objects2grids = {
         'wool':'v',
         'prismarine':'v',
@@ -338,21 +349,21 @@ def show_blocks_in_building():
         'air':''
     }
 
-    with open(join('outputs','blocks_in_building.json')) as json_file:
+    with open(join(output_folder, jsn_file)) as json_file:
         data = json.load(json_file)
         blocks = data['blocks']
-        
+
         print(data['region'].values())
         x_low, x_high, z_low, z_high, y_low, y_high = data['region'].values()
-        
+
         ## for Singleplayer
         # x_high = -2142
-        
+
         world = []
         for z in range(z_low, z_high):
             row = []
             for x in range(x_low, x_high):
-                
+
                 ## we visualize the floor that's one level above the ground
                 key = str((x,y_low+1,z)).replace('(','').replace(' ','').replace(')','')
                 type = blocks[key]
@@ -362,7 +373,7 @@ def show_blocks_in_building():
                     type = objects2grids[type]
                 row.append(type)
             world.append(row)
-            
+
         df = pd.DataFrame(world, index = range(z_low, z_high), columns = range(x_low, x_high))
 
         return df
