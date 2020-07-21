@@ -134,7 +134,7 @@ def generate_maps(world, region, ranges, output_folder=default_output_folder):
                         floor_level = stats['y']-y_ind_low
                         name = '[' + str(x_ind) + ',' + str(z_ind)
                         name += ',' + str(floor_level) +']'
-                        name = join('outputs', 'floors', name + "_floor.jpg")
+                        name = join(output_folder, 'floors', name + "_floor.jpg")
                         create_collage(16*16, 16*16, 16, 16, name, image_layer)
                         if floor_level not in collage_layers:
                             collage_layers[floor_level] = []
@@ -323,7 +323,7 @@ def merge_folders(folder1, folder2, output_folder=default_output_folder, jsn_fil
             if 'x' in key: X_CHANGED = True
             if 'z' in key: Z_CHANGED = True
 
-    with open('outputs/blocks_in_building.json', 'w') as outfile:
+    with open(join(output_folder, jsn_file), 'w') as outfile:
         json.dump(json3, outfile)
 
     # ----------------------------
