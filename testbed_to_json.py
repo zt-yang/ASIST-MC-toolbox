@@ -34,7 +34,14 @@ mc_worlds = {
                         'ranges': (-2048, -2017, 128, 207, 60, 62)}
         },
     'Sparky': {'Sparky': {'region': (-5, 0),
-                          'ranges': (-2176, -2097, 144, 207, 52, 54)}}}
+                          'ranges': (-2176, -2097, 144, 207, 52, 54)}},
+    'x_Saturn_Feb4': {
+        'Saturn_region_5_0': {'region': (-5, 0),
+                              'ranges': (-2240, -2065, 1, 143, 22, 25)},
+        'Saturn_region_5_1': {'region': (-5, -1),
+                              'ranges': (-2240, -2065, -96, -1, 22, 25)}
+    }
+}
 
 
 def make_world_path(world_name):
