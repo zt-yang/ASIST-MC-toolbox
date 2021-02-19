@@ -1,0 +1,11 @@
+__pycache__
+outputs/_old
+outputs/traces_9/*.png
+resources/blocks
+resources/my_blocks
+inputs/worlds/
+inputs/trajectories/
+output_trajectories/
+
+**/.DS_Store
+**/__pycache__/

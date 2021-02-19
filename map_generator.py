@@ -91,6 +91,9 @@ def generate_maps(world, region, ranges, output_folder=default_output_folder):
         for z_ind in range(z_ind_low, z_ind_high+1):
 
             # only look at the floor level
+            print(x_ind, z_ind)
+            if x_ind == 20 and z_ind == 5:
+                print()
             blocks = region_blocks[x_ind, z_ind]['']['Level']['Sections'][y_ind]['Blocks']
             blocks = list(blocks)
 
