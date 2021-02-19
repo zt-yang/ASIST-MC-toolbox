@@ -97,5 +97,6 @@
 "jukebox": "jukebox_side.png",
 "trapped_chest": "jukebox_top.png",
 "web": "web.png",
-"pink_glazed_terracotta": "concrete_powder_pink.png"
+"pink_glazed_terracotta": "concrete_powder_pink.png",
+"magenta_glazed_terracotta", "concrete_powder_magenta.png"
 }
