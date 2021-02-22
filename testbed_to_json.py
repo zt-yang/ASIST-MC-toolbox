@@ -35,10 +35,15 @@ mc_worlds = {
         },
     'Sparky': {'Sparky': {'region': (-5, 0),
                           'ranges': (-2176, -2097, 144, 207, 52, 54)}},
-    'x_Saturn_Feb4': {
-        'Saturn_region_5_0': {'region': (-5, 0),
+    'Saturn_Feb4': {
+        'Saturn_Feb4_region_5_0': {'region': (-5, 0),
                               'ranges': (-2240, -2065, 1, 143, 22, 25)},
-        'Saturn_region_5_1': {'region': (-5, -1),
+        'Saturn_Feb4_region_5_1': {'region': (-5, -1),
+                              'ranges': (-2240, -2065, -96, -1, 22, 25)}},
+    'Saturn_Training_Feb4': {
+        'Saturn_Training_Feb4_region_5_0': {'region': (-5, 0),
+                              'ranges': (-2240, -2065, 0, 143, 22, 25)},
+        'Saturn_Training_Feb4_region_5_1': {'region': (-5, -1),
                               'ranges': (-2240, -2065, -96, -1, 22, 25)}
     }
 }
@@ -61,6 +66,15 @@ def ensure_dir_exists(path):
         return False
 
 
+def print_regions(regions):
+    mc.pretty(regions)
+    for r in regions:
+        mc.pretty(r)
+        # for chunk in r.values():
+        #     mc.pretty(chunk)
+        # pprint(r)
+        # print(r)
+
 def make_world(from_world, region, ranges, to_world=None):
     if to_world is None:
         to_world = from_world
@@ -68,6 +82,10 @@ def make_world(from_world, region, ranges, to_world=None):
     ensure_dir_exists(to_world + '/floors')
     jsn_file = from_world + '.json'
     world = mc.load(make_world_path(from_world))
+    # print_regions(world.regions)
+    # for chunk in world.get_chunks():
+    #     mc.pretty(chunk)
+
     all_blocks, important_blocks = mg.generate_maps(world, region, ranges, to_world)
     mg.generate_json(all_blocks, ranges, to_world, jsn_file)
 
