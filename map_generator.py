@@ -1,4 +1,6 @@
 import sys
+import traceback
+
 sys.path.append('MCWorldlib.egg')
 import mcworldlib as mc
 import math
@@ -55,7 +57,7 @@ def create_collage(width, height, cols, rows, name, listofimages):
 
 # first version of the Singleplayer world
 # all_blocks = generate_maps(region, (23, 26, 9, 11, 12, 14, 1))
-def generate_maps(world, region, ranges, output_folder=default_output_folder):
+def generate_maps(world, region, ranges, output_folder=default_output_folder, gen_images=True):
 
     x_low, x_high, z_low, z_high, y_low, y_high = ranges
     x_ind_low = int(x_low / 16 - region[0] * 32)  # int((2560 + x_low)/16)
@@ -67,7 +69,7 @@ def generate_maps(world, region, ranges, output_folder=default_output_folder):
     y_ind_high = int(y_high - y_ind * 16)
     print(x_ind_low, x_ind_high, z_ind_low, z_ind_high, y_ind_low, y_ind_high)
     region_blocks = world.regions[region[0], region[1]]
-
+    # mc.pretty(region_blocks)
     # ---------------------------------------------------------
     # get the mapping from block id to block type
     block_dict = {}
@@ -93,9 +95,12 @@ def generate_maps(world, region, ranges, output_folder=default_output_folder):
             # only look at the floor level
             print(x_ind, z_ind)
             if x_ind == 20 and z_ind == 5:
-                print()
-            blocks = region_blocks[x_ind, z_ind]['']['Level']['Sections'][y_ind]['Blocks']
-            blocks = list(blocks)
+                print('y_ind', y_ind)
+
+            blocks = list()
+            if y_ind <= (len(region_blocks[x_ind, z_ind]['']['Level']['Sections']) - 1):
+                blocks = region_blocks[x_ind, z_ind]['']['Level']['Sections'][y_ind]['Blocks']
+                blocks = list(blocks)
 
             # offsets in the game world
             x_0 = 16* (x_ind + region[0]*32)
@@ -133,16 +138,17 @@ def generate_maps(world, region, ranges, output_folder=default_output_folder):
                         cannot_find_blocks.append(stats['block_type'])
 
                     image_layer.append(texture)
-                    if stats['x'] == 15 and stats['z'] == 15:
-                        floor_level = stats['y']-y_ind_low
-                        name = '[' + str(x_ind) + ',' + str(z_ind)
-                        name += ',' + str(floor_level) +']'
-                        name = join(output_folder, 'floors', name + "_floor.jpg")
-                        create_collage(16*16, 16*16, 16, 16, name, image_layer)
-                        if floor_level not in collage_layers:
-                            collage_layers[floor_level] = []
-                        collage_layers[floor_level].append(name)
-                        image_layer = []
+                    if gen_images:
+                        if stats['x'] == 15 and stats['z'] == 15:
+                            floor_level = stats['y'] - y_ind_low
+                            name = '[' + str(x_ind) + ',' + str(z_ind)
+                            name += ',' + str(floor_level) + ']'
+                            name = join(output_folder, 'floors', name + "_floor.jpg")
+                            create_collage(16 * 16, 16 * 16, 16, 16, name, image_layer)
+                            if floor_level not in collage_layers:
+                                collage_layers[floor_level] = []
+                            collage_layers[floor_level].append(name)
+                            image_layer = []
 
     for block in set(cannot_find_blocks):
         print('cannot find image in resources/myblocks/',block)
@@ -152,62 +158,79 @@ def generate_maps(world, region, ranges, output_folder=default_output_folder):
     ## This way we will get one floor plan as the base for visualizing human trajectories
     important_blocks = {}
 
+    if gen_images:
     ## create the dict for one block each (x,z) location
-    for key in all_blocks.keys():
-        x,y,z = key
+        for key in all_blocks.keys():
+            x,y,z = key
 
-        block_type = all_blocks[key]['block_type']
-        WRITTEN = False
-        if y == y_low+2 and (block_type == 'wall_sign'):
-            important_blocks[x,z] = all_blocks[(x,y_low+2,z)]
-            WRITTEN = True
-        elif y == y_low+1 and (block_type == 'lever' or block_type == 'wall_sign'):
-            important_blocks[x,z] = all_blocks[(x,y_low+1,z)]
-            WRITTEN = True
-        elif y == y_low:
-            if block_type == 'stained_hardened_clay' and all_blocks[(x,y_low+2,z)]['block_type'] == 'air':
-                important_blocks[x,z] = all_blocks[(x,y_low+2,z)]
+            block_type = all_blocks[key]['block_type']
+            WRITTEN = False
+            if y == y_low + 2 and (block_type == 'wall_sign'):
+                important_blocks[x, z] = all_blocks[(x, y_low + 2, z)]
                 WRITTEN = True
-            elif block_type == 'stained_hardened_clay' and all_blocks[(x,y_low+1,z)]['block_type'] == 'air':
-                important_blocks[x,z] = all_blocks[(x,y_low+1,z)]
+            elif y == y_low + 1 and (block_type == 'lever' or block_type == 'wall_sign'):
+                important_blocks[x, z] = all_blocks[(x, y_low + 1, z)]
                 WRITTEN = True
-            else:
-                important_blocks[x,z] = all_blocks[(x,y_low,z)]
-                WRITTEN = True
+            elif y == y_low:
+                if block_type == 'stained_hardened_clay' and all_blocks[(x, y_low + 2, z)]['block_type'] == 'air':
+                    important_blocks[x, z] = all_blocks[(x, y_low + 2, z)]
+                    WRITTEN = True
+                elif block_type == 'stained_hardened_clay' and all_blocks[(x, y_low + 1, z)]['block_type'] == 'air':
+                    important_blocks[x, z] = all_blocks[(x, y_low + 1, z)]
+                    WRITTEN = True
+                else:
+                    important_blocks[x, z] = all_blocks[(x, y_low, z)]
+                    WRITTEN = True
 
-        if WRITTEN:
-            if all_blocks[(x,y_low+1,z)]['block_type'] == 'air':
-                important_blocks[x,z]['open_top'] = True
-            else:
-                important_blocks[x,z]['open_top'] = False
+            if WRITTEN:
+                if all_blocks[(x, y_low + 1, z)]['block_type'] == 'air':
+                    important_blocks[x, z]['open_top'] = True
+                else:
+                    important_blocks[x, z]['open_top'] = False
 
     ## generate collage
-    for key in important_blocks.keys():
-        x,z = key
-        stats = important_blocks[key]
-        image_layer.append(join('resources','myblocks',images[stats['block_type']]))
+    if gen_images:
+        for key in important_blocks.keys():
+            x, z = key
+            stats = important_blocks[key]
+            image_lookup = stats['block_type']
+            # print('image lookup', image_lookup)
+            if image_lookup in images:
+                image_layer.append(join('resources', 'myblocks', images[stats['block_type']]))
+            else:
+                print('not found:', image_lookup, 'in', json_file.name)
 
-        if stats['x'] == 15 and stats['z'] == 15:
-            floor_level = 9
-            name = '[' + str(round(x/16 - region[0] * 32)) + ',' + str(round(z/16 - region[1] * 32))
-            name += ',' + str(floor_level) +']'
-            name = join(output_folder,'floors', name + "_floor.jpg")
-            create_collage(16*16, 16*16, 16, 16, name, image_layer)
-            if floor_level not in collage_layers:
-                collage_layers[floor_level] = []
-            collage_layers[floor_level].append(name)
-            image_layer = []
+            if stats['x'] == 15 and stats['z'] == 15:
+                floor_level = 9
+                name = '[' + str(round(x / 16 - region[0] * 32)) + ',' + str(round(z / 16 - region[1] * 32))
+                name += ',' + str(floor_level) + ']'
+                name = join(output_folder, 'floors', name + "_floor.jpg")
+                try:
+                    create_collage(16 * 16, 16 * 16, 16, 16, name, image_layer)
+                except Exception as e:
+                    # print(e)
+                    print(traceback.print_exc())
+
+                if floor_level not in collage_layers:
+                    collage_layers[floor_level] = []
+                collage_layers[floor_level].append(name)
+                image_layer = []
 
     # ---------------------------------------------------------
     ## make collage out of smaller patches
     x_len = x_ind_high - x_ind_low + 1
     z_len = z_ind_high - z_ind_low + 1
-    for key in collage_layers.keys():
-        name = join(output_folder,str(key) + '_map.png')
-        create_collage(16*16*x_len, 16*16*z_len, x_len, z_len, name, collage_layers[key])
-        for image in collage_layers[key]:
-            os.remove(image)
-        if ipy_display is True and key == 9:  display(iImage(filename=name))
+    if gen_images:
+        for key in collage_layers.keys():
+            name = join(output_folder, str(key) + '_map.png')
+            try:
+                create_collage(16 * 16 * x_len, 16 * 16 * z_len, x_len, z_len, name, collage_layers[key])
+                for image in collage_layers[key]:
+                    os.remove(image)
+            except Exception as e:
+                print(traceback.print_exc())
+
+            if ipy_display is True and key == 9:  display(iImage(filename=name))
 
     return all_blocks, important_blocks
 
