@@ -37,9 +37,9 @@ mc_worlds = {
                           'ranges': (-2176, -2097, 144, 207, 52, 54)}},
     'Saturn_Feb4': {
         'Saturn_Feb4_region_5_0': {'region': (-5, 0),
-                              'ranges': (-2240, -2065, 1, 143, 22, 25)},
+                              'ranges': (-2240, -2065, 0, 143, 59, 64)},
         'Saturn_Feb4_region_5_1': {'region': (-5, -1),
-                              'ranges': (-2240, -2065, -96, -1, 22, 25)}},
+                              'ranges': (-2240, -2065, -96, -1, 59, 64)}},
     'Saturn_Training_Feb4': {
         'Saturn_Training_Feb4_region_5_0': {'region': (-5, 0),
                               'ranges': (-2240, -2065, 0, 143, 22, 25)},
@@ -86,7 +86,7 @@ def make_world(from_world, region, ranges, to_world=None):
     # for chunk in world.get_chunks():
     #     mc.pretty(chunk)
 
-    all_blocks, important_blocks = mg.generate_maps(world, region, ranges, to_world)
+    all_blocks, important_blocks = mg.generate_maps(world, region, ranges, to_world, False)
     mg.generate_json(all_blocks, ranges, to_world, jsn_file)
 
 
