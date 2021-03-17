@@ -40,6 +40,11 @@ mc_worlds = {
                               'ranges': (-2240, -2065, 0, 143, 59, 64)},
         'Saturn_Feb4_region_5_1': {'region': (-5, -1),
                               'ranges': (-2240, -2065, -96, -1, 59, 64)}},
+    'Saturn_1.1_3D': {
+        'Saturn_1.1_3D_region_5_0': {'region': (-5, 0),
+                                   'ranges': (-2240, -2065, 0, 143, 59, 64)},
+        'Saturn_1.1_3D_region_5_1': {'region': (-5, -1),
+                                   'ranges': (-2240, -2065, -96, -1, 59, 64)}},
     'Saturn_Training_Feb4': {
         'Saturn_Training_Feb4_region_5_0': {'region': (-5, 0),
                               'ranges': (-2240, -2065, 0, 143, 22, 25)},
@@ -54,11 +59,11 @@ def make_world_path(world_name):
 
 
 def ensure_dir_exists(path):
-    print('Current Working Dir', os.getcwd())
-    print('Ensuring Dir exists', path)
+    # print('Current Working Dir', os.getcwd())
     if os.path.exists(path):
         return True
     try:
+        print('Ensuring Dir exists', path)
         os.makedirs(path)
     except Exception as e:
         print('Exception creating:', path)
@@ -82,6 +87,7 @@ def make_world(from_world, region, ranges, to_world=None):
     ensure_dir_exists(to_world + '/floors')
     jsn_file = from_world + '.json'
     world = mc.load(make_world_path(from_world))
+    print()
     # print_regions(world.regions)
     # for chunk in world.get_chunks():
     #     mc.pretty(chunk)
@@ -125,3 +131,4 @@ if __name__ == "__main__":
         pprint(mc_worlds)
         sys.exit(1)
     make_world_wrapper(world_name)
+    print('Done testbed_to_json.py\n')

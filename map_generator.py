@@ -67,7 +67,7 @@ def generate_maps(world, region, ranges, output_folder=default_output_folder, ge
     y_ind = math.floor(y_low / 16)
     y_ind_low = int(y_low - y_ind * 16)
     y_ind_high = int(y_high - y_ind * 16)
-    print(x_ind_low, x_ind_high, z_ind_low, z_ind_high, y_ind_low, y_ind_high)
+    # print(x_ind_low, x_ind_high, z_ind_low, z_ind_high, y_ind_low, y_ind_high)
     region_blocks = world.regions[region[0], region[1]]
     # mc.pretty(region_blocks)
     # ---------------------------------------------------------
@@ -93,9 +93,9 @@ def generate_maps(world, region, ranges, output_folder=default_output_folder, ge
         for z_ind in range(z_ind_low, z_ind_high+1):
 
             # only look at the floor level
-            print(x_ind, z_ind)
-            if x_ind == 20 and z_ind == 5:
-                print('y_ind', y_ind)
+            # print(x_ind, z_ind)
+            # if x_ind == 20 and z_ind == 5:
+            #     print('y_ind', y_ind)
 
             blocks = list()
             if y_ind <= (len(region_blocks[x_ind, z_ind]['']['Level']['Sections']) - 1):
@@ -255,7 +255,9 @@ def generate_json(all_blocks, ranges, output_folder=default_output_folder, jsn_f
     region['y_low'] = ranges[4]
     region['y_high'] = ranges[5]
     blocks_in_building['region'] = region
-
+    print('Current Working Dir', os.getcwd())
+    print('Writing json file:', join(output_folder, jsn_file))
+    print()
     with open(join(output_folder, jsn_file), 'w') as outfile:
         json.dump(blocks_in_building, outfile)
 
@@ -310,7 +312,7 @@ def generate_csv(important_blocks, indices, output_folder=default_output_folder)
 
 
 def merge_folders(folder1, folder2, output_folder=default_output_folder, jsn_file=default_json_file):
-
+    print('Merging folder', folder1, folder2, jsn_file)
     def get_concat_h(im1, im2):
         dst = Image.new('RGB', (im1.width + im2.width, im1.height))
         dst.paste(im1, (0, 0))
@@ -349,6 +351,9 @@ def merge_folders(folder1, folder2, output_folder=default_output_folder, jsn_fil
             if 'x' in key: X_CHANGED = True
             if 'z' in key: Z_CHANGED = True
 
+    print('merge_folder writing jsn file')
+    print('Current Working Dir', os.getcwd())
+    print(join(output_folder, jsn_file))
     with open(join(output_folder, jsn_file), 'w') as outfile:
         json.dump(json3, outfile)
 
@@ -358,10 +363,13 @@ def merge_folders(folder1, folder2, output_folder=default_output_folder, jsn_fil
 
     for level in [0,1,2,9]:
         map_img = str(level) + '_map.png'
-        im1 = Image.open(join(folder1, map_img))
-        im2 = Image.open(join(folder2, map_img))
-        if X_CHANGED: get_concat_h(im1, im2).save(join(output_folder, map_img))
-        if Z_CHANGED: get_concat_v(im1, im2).save(join(output_folder, map_img))
+        try:
+            im1 = Image.open(join(folder1, map_img))
+            im2 = Image.open(join(folder2, map_img))
+            if X_CHANGED: get_concat_h(im1, im2).save(join(output_folder, map_img))
+            if Z_CHANGED: get_concat_v(im1, im2).save(join(output_folder, map_img))
+        except FileNotFoundError as e:
+            print('File not found:', e)
 
 
 def show_blocks_in_building(output_folder=default_output_folder, jsn_file=default_json_file):
