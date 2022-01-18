@@ -56,6 +56,12 @@ mc_worlds = {
         'Saturn_2.0_3D_region_5_1': {'region': (-5, -1),
                                      'ranges': (-2240, -2065, -1, -16, 59, 64)}
         },
+    'Saturn_2.6_3D': {
+        'Saturn_2.6_3D_region_5_0': {'region': (-5, 0),
+                                     'ranges': (-2240, -2065, -14, 70, 59, 64)},
+        'Saturn_2.6_3D_region_5_1': {'region': (-5, -1),
+                                     'ranges': (-2240, -2065, -1, -16, 59, 64)}
+    } ,
     'Saturn_Training_Feb4': {
         'Saturn_Training_Feb4_region_5_0': {'region': (-5, 0),
                               'ranges': (-2240, -2065, 0, 143, 22, 25)},
